@@ -4,6 +4,7 @@ import "./App.css";
 import { assemble } from "./assembler";
 import { Emulator } from "./emulator";
 import { registerList } from "./encoding";
+import { languageDef, configuration, theme } from "./language-def";
 
 const defaultText =`; macro definitions
 @macro hlt
@@ -53,6 +54,16 @@ function App() {
 	const [assembledMemory, setAssembledMemory] = useState([]);
 	const [registers, setRegisters] = useState(new Uint8Array(16));
 
+	const editorWillMount = monaco => {
+		if (!monaco.languages.getLanguages().some(({ id }) => id === 'doc')) {
+			monaco.languages.register({ id: 'doc' });
+			monaco.languages.setMonarchTokensProvider('doc', languageDef);
+			monaco.languages.setLanguageConfiguration('doc', configuration);
+		}
+
+		monaco.editor.defineTheme('docTheme', theme);
+	};
+
 	const handleEditorDidMount = (editor, _monaco) => {
 		editorRef.current = editor;
 	};
@@ -70,7 +81,8 @@ function App() {
 
 	return (
 		<div className="App">
-			<Editor height="100vh" width="50vw" theme="vs-dark" onMount={handleEditorDidMount} options={editorOptions} defaultValue={defaultText} />
+			<Editor height="100vh" width="50vw" theme="docTheme" onMount={handleEditorDidMount} 
+				language="doc" beforeMount={editorWillMount} options={editorOptions} defaultValue={defaultText} />
 			<main>
 				<header>
 					<p className="title">Decently Okay Computer</p>
