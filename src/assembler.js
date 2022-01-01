@@ -5,12 +5,20 @@ export class LexerError extends Error {
 		super(message);
 		this.index = index;
 	}
+
+	getLine(source) {
+		return source.substring(0, this.index).split("\n").length;
+	}
 }
 
 export class ParserError extends Error {
 	constructor(message, token) {
 		super(message);
 		this.token = token;
+	}
+
+	getLine(source) {
+		return source.substring(0, this.token.index).split("\n").length;
 	}
 }
 
@@ -109,54 +117,59 @@ const parse = (tokens) => {
 					const value = parseInteger(arg.value.substring(1));
 					const literal = {
 						type: "literal",
-						value
+						value,
+						token: arg
 					};
 					args.push(literal);
 				}
 				else if(arg.type === "label") {
 					args.push({
 						type: "label",
-						value: arg.value
+						value: arg.value,
+						token: arg
 					});
 				}
 				else if(arg.type === "register") {
 					args.push({
 						type: "register",
-						value: arg.value
+						value: arg.value,
+						token: arg
 					});
 				}
 				else if(arg.type === "register-variable") {
 					if(currentMacro === null) {
-						throw new ParserError("Cannot use variables outside of a macro");
+						throw new ParserError("Cannot use variables outside of a macro", arg);
 					}
 					const value = parseInteger(arg.value.substring(2));
 
 					if(value >= currentMacro.args.register.length) {
-						throw new ParserError(`Macro register variable '${value}' exceeds variable count`);
+						throw new ParserError(`Macro register variable '${value}' exceeds variable count`, arg);
 					}
 
 					args.push({
 						type: "register-variable",
-						value
+						value,
+						token: arg
 					});
 				}
 				else if(arg.type === "literal-variable") {
 					if(currentMacro === null) {
-						throw new ParserError("Cannot use variables outside of a macro");
+						throw new ParserError("Cannot use variables outside of a macro", arg);
 					}
 					const value = parseInteger(arg.value.substring(2));
 
 					if(value >= currentMacro.args.literal.length) {
-						throw new ParserError(`Macro literal variable '${value}' exceeds variable count`);
+						throw new ParserError(`Macro literal variable '${value}' exceeds variable count`, arg);
 					}
 
 					args.push({
 						type: "literal-variable",
-						value
+						value,
+						token: arg
 					});
 				}
 				else {
-					throw new ParserError("Expected argument");
+					throw new ParserError("Expected argument", arg);
 				}
 			} while(match("comma"));
 		}
@@ -191,7 +204,7 @@ const parse = (tokens) => {
 					args.all.push(lv);
 				}
 				else {
-					throw new ParserError("Expected argument");
+					throw new ParserError("Expected argument", arg);
 				}
 			} while(match("comma"));
 		}
@@ -335,7 +348,7 @@ const assembleParserResult = (root) => {
 					const macroExpanded = expandMacro(macroNode.name, macroNode.args);
 
 					if(!macroExpanded) {
-						throw new ParserError(`Unknown macro '${macroNode.name}' with arguments: ${macroNode.args.map(n => n.type).join(", ")}`);
+						throw new ParserError(`Unknown macro '${macroNode.name}' with arguments: ${macroNode.args.map(n => n.type).join(", ")}`, macroNode.token);
 					}
 				}
 				else {
@@ -350,7 +363,7 @@ const assembleParserResult = (root) => {
 						const macroExpanded = expandMacro(type, args);
 
 						if(!macroExpanded) {
-							throw new ParserError(`Unknown instruction '${type}' with arguments: ${args.map(n => n.type).join(", ")}`);
+							throw new ParserError(`Unknown instruction '${type}' with arguments: ${args.map(n => n.type).join(", ")}`, macroNode.token);
 						}
 					}
 					else {
@@ -374,7 +387,7 @@ const assembleParserResult = (root) => {
 			const macroExpanded = expandMacro(node.name, node.args);
 
 			if(!macroExpanded) {
-				throw new ParserError(`Unknown macro '${node.name}' with arguments: ${node.args.map(n => n.type).join(", ")}`);
+				throw new ParserError(`Unknown macro '${node.name}' with arguments: ${node.args.map(n => n.type).join(", ")}`, node.token);
 			}
 		}
 		else if(node.type === "instruction") {
@@ -389,7 +402,7 @@ const assembleParserResult = (root) => {
 				const macroExpanded = expandMacro(type, args);
 
 				if(!macroExpanded) {
-					throw new ParserError(`Unknown instruction '${type}' with arguments: ${args.map(n => n.type).join(", ")}`);
+					throw new ParserError(`Unknown instruction '${type}' with arguments: ${args.map(n => n.type).join(", ")}`, node.token);
 				}
 			}
 			else {
@@ -400,8 +413,6 @@ const assembleParserResult = (root) => {
 			macroExpanded.push(node);
 		}
 	}
-
-	console.log(macroExpanded);
 
 	// Resolve labels
 	for(let node of macroExpanded) {

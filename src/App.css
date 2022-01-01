@@ -65,3 +65,10 @@ table, th, td {
 	border: 1px solid #9c9c9c;
 	padding: .2em;
 }
+
+.errorGlyph {
+	background: red;
+}
+.errorLine {
+	background: #7a0707;
+}

@@ -77,7 +77,7 @@ export class Emulator {
 				case Encoding.POP_REGISTER: {
 					const register = this.memory[ip++] & 0xf;
 	
-					this.registers[register] = this.memory[this.registers[registerMap.rsp]++];
+					this.registers[register] = this.memory[++this.registers[registerMap.rsp]];
 	
 					break;
 				}
@@ -180,7 +180,6 @@ export class Emulator {
 			}
 		}
 	
-		console.log(this.registers);
 	}
 
 }

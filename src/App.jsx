@@ -44,15 +44,19 @@ $top:
     hlt`;
 
 const editorOptions = {
-	fontFamily: "JetBrains Mono"
+	fontFamily: "JetBrains Mono",
+	glyphMargin: true
 };
 
 function App() {
 
 	const editorRef = useRef(null);
+	const monacoRef = useRef(null);
 	const emulatorRef = useRef(new Emulator());
+	const decorationsRef = useRef([]);
 	const [assembledMemory, setAssembledMemory] = useState([]);
 	const [registers, setRegisters] = useState(new Uint8Array(16));
+	const [error, setError] = useState(null);
 
 	const editorWillMount = monaco => {
 		if (!monaco.languages.getLanguages().some(({ id }) => id === 'doc')) {
@@ -64,13 +68,42 @@ function App() {
 		monaco.editor.defineTheme('docTheme', theme);
 	};
 
-	const handleEditorDidMount = (editor, _monaco) => {
+	const handleEditorDidMount = (editor, monaco) => {
 		editorRef.current = editor;
+		monacoRef.current = monaco;
 	};
 
 	const handleAssemble = () => {
 		const source = editorRef.current.getValue();
-		setAssembledMemory(assemble(source));
+		try {
+			setAssembledMemory(assemble(source));
+
+			setError(null);
+
+			if(decorationsRef.current.length !== 0) {
+				decorationsRef.current = editorRef.current.deltaDecorations(
+					decorationsRef.current,
+					[]
+				);
+			}
+		} catch(e) {
+			const line = e.getLine(source);
+			setError(`[${line}] ${e.message}`);
+
+			decorationsRef.current = editorRef.current.deltaDecorations(
+				decorationsRef.current,
+				[
+					{
+						range: new monacoRef.current.Range(line, 1, line, 1),
+						options: {
+							isWholeLine: true,
+							className: 'errorLine',
+							glyphMarginClassName: 'errorGlyph'
+						}
+					}
+				]
+			);
+		}
 	};
 
 	const handleRun = () => {
@@ -90,7 +123,8 @@ function App() {
 					<button onClick={handleRun}>Run</button>
 				</header>
 				<div style={{ display: "flex", gap: "0.5em" }}>
-					{assembledMemory.map((b, i) => <p key={i}>{b}</p>)}
+					{error ? <p className="error">{error}</p> :
+					assembledMemory.map((b, i) => <p key={i}>{b}</p>)}
 				</div>
 				<table>
 					<thead>
@@ -102,7 +136,7 @@ function App() {
 					<tbody>
 						{
 							Array.from(registers).map((v, i) => {
-								return (<tr>
+								return (<tr key={i}>
 									<td>{registerList[i]}</td>
 									<td>{v}</td>
 								</tr>);
