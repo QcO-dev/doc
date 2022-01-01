@@ -81,3 +81,15 @@ table, th, td {
 	display: flex;
 	gap: 1em;
 }
+
+.memory {
+	display: grid;
+	grid-template-rows: repeat(17, 1fr);
+	grid-template-columns: repeat(17, 1fr);
+	border-collapse: collapse;
+}
+
+.memoryItem {
+	padding: .15rem;
+	border: 1px solid #9c9c9c;
+}

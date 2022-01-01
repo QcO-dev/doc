@@ -39,6 +39,7 @@ function App() {
 	const emulatorRef = useRef(new Emulator());
 	const decorationsRef = useRef([]);
 	const [assembledMemory, setAssembledMemory] = useState([]);
+	const [memory, setMemory] = useState(new Uint8Array());
 	const [registers, setRegisters] = useState(new Uint8Array(16));
 	const [error, setError] = useState(null);
 
@@ -60,7 +61,9 @@ function App() {
 	const handleAssemble = () => {
 		const source = editorRef.current.getValue();
 		try {
-			setAssembledMemory(assemble(source, resolveInclude));
+			const mem = assemble(source, resolveInclude);
+			setAssembledMemory(mem);
+			setMemory(mem);
 
 			setError(null);
 
@@ -94,6 +97,24 @@ function App() {
 		const emulator = emulatorRef.current;
 		emulator.emulate(assembledMemory);
 		setRegisters(emulator.registers);
+		setMemory(emulator.memory);
+	};
+
+	const renderMemory = () => { 
+		const baseMemory = Array.from(memory.slice(0, 0xff + 1)).map((b, i) => <p key={i} className="memoryItem">{b}</p>);
+
+		const padded = Array.from({ ...baseMemory, length: 0xff + 1 }, (v, i) => v ?? <p key={i} className="memoryItem">0</p>);
+
+		padded.unshift(...Array.from({length: 16}).map((_, i) => i).map((b, i) => <p key={"ht" + i} className="memoryHeader">{b.toString(16).padStart(2, '0')}</p>));
+
+		padded.unshift(<p key={"hc"} className="memoryHeader">+</p>);
+
+		for(let i = 0; i < 16; i++) {
+			const v = i + 1;
+			padded.splice(v * 16 + v, 0, <p key={"hs" + i} className="memoryHeader">{(i * 16).toString(16).padStart(2, '0')}</p>);
+		}
+
+		return padded;
 	};
 
 	return (
@@ -110,9 +131,10 @@ function App() {
 				{<p className="error">{error ?? ""}</p>}
 
 				<div className="monitors">
-					<div style={{ display: "flex", gap: "0.5em" }}>
-						{assembledMemory.map((b, i) => <p key={i}>{b}</p>)}
+					<div className="memory">
+						{renderMemory()}
 					</div>
+
 					<table>
 						<thead>
 							<tr>
