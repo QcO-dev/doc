@@ -10,7 +10,7 @@ The DOC has access to 64KB of memory (An address consists of 16 bits).
 
  - (0-7) General Purpose Register 1-8
  - (8) Volatile Register (RV)
- - (9) Page Register (RP)
+ - (9) Stack High Byte Register (RSH)
  - (A) Zero Register (RZ)
  - (B) Address Low Byte Register (RAL)
  - (C) Address High Byte Register (RAH)

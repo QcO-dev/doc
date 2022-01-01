@@ -82,7 +82,7 @@ export const instructions = {
 		encoding: 0xD,
 		length: 2
 	},
-	"adc-register": {
+	"not-register": {
 		encoding: 0xE,
 		length: 1
 	},
