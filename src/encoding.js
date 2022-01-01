@@ -10,7 +10,7 @@ export const registers = {
 	r7: 0x7,
 	r8: 0x8,
 	rv: 0x9,
-	rp: 0xA,
+	rsh: 0xA,
 	ral: 0xB,
 	rah: 0xC,
 	rsp: 0xD,
@@ -18,7 +18,7 @@ export const registers = {
 	rf: 0xF
 };
 
-export const registerList = ["r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "rv", "rp", "ral", "rah", "rsp", "rbp", "rf"];
+export const registerList = ["r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "rv", "rsh", "ral", "rah", "rsp", "rbp", "rf"];
 
 export const instructionsList = [
 	"mov", "sta", "lda", "psh", "pop", "jnz", "add", "adc",

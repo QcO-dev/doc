@@ -8,7 +8,7 @@ export class Emulator {
 	registers = null;
 
 	emulate(assembledMemory) {
-		this.memory = new Uint8Array(49152);
+		this.memory = new Uint8Array(0xffff + 1);
 		this.memory.set(assembledMemory);
 	
 		this.registers = new Uint8Array(16);
@@ -68,16 +68,26 @@ export class Emulator {
 	
 				case Encoding.PSH_REGISTER: {
 					const register = this.memory[ip++] & 0xf;
-	
-					this.memory[this.registers[registerMap.rsp]--] = this.registers[register];
-	
+					
+					let address = (this.registers[registerMap.rsh] << 8) | this.registers[registerMap.rsp];
+
+					this.memory[address--] = this.registers[register];
+					
+					this.registers[registerMap.rsh] = address >> 8;
+					this.registers[registerMap.rsp] = address & 0xff;
+
 					break;
 				}
 	
 				case Encoding.POP_REGISTER: {
 					const register = this.memory[ip++] & 0xf;
+
+					let address = (this.registers[registerMap.rsh] << 8) | this.registers[registerMap.rsp];
 	
-					this.registers[register] = this.memory[++this.registers[registerMap.rsp]];
+					this.registers[register] = this.memory[++address];
+
+					this.registers[registerMap.rsh] = address >> 8;
+					this.registers[registerMap.rsp] = address & 0xff;
 	
 					break;
 				}
