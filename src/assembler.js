@@ -39,6 +39,7 @@ const tokenMatchers = [
 	matcher(/^\$[a-zA-Z_][a-zA-Z0-9_]*/, "label"),
 	matcher(/^%r[0-9]+/, "register-variable"),
 	matcher(/^%l[0-9]+/, "literal-variable"),
+	matcher(/^".*?"/, "string"),
 	matcher(/^,/, "comma"),
 	matcher(/^:/, "colon"),
 	matcher(/^[\r\n]+/, "newline"),
@@ -62,6 +63,8 @@ const lex = (text) => {
 			if(value.type !== "whitespace") tokens.push(value);
 
 			index += value.value.length;
+
+			if(value.type === "string") value.value = value.value.substring(1, value.value.length - 1);
 		}
 		else {
 			throw new LexerError(`Unexpected character '${text.charAt(index)}'`, index);
@@ -289,6 +292,15 @@ const parse = (tokens) => {
 
 			root.push(macroDef);
 		}
+		else if(token.type === "directive" && token.value === "@include") {
+			const path = consume("string", "Expected include name");
+
+			root.push({
+				type: "include",
+				path,
+				token
+			});
+		}
 		else if(!tokenMade) {
 			throw new ParserError("Expected instruction, label, or macro definition", token);
 		}
@@ -498,10 +510,37 @@ const assembleParserResult = (root) => {
 
 };
 
-export const assemble = (source) => {
+const expandIncludes = (root, includeLocator) => {
+	const expanded = [];
+	for(let node of root) {
+		if(node.type === "include") {
+			const path = node.path.value;
+
+			const source = includeLocator(path);
+
+			if(source === null) {
+				throw new ParserError(`Cannot resolve include '${path}'`, node.token);
+			}
+
+			const tokens = lex(source);
+
+			const included = parse(tokens);
+
+			expanded.push(...expandIncludes(included, includeLocator));
+		}
+		else {
+			expanded.push(node);
+		}
+	}
+	return expanded;
+};
+
+export const assemble = (source, includeResolver) => {
 	const tokens = lex(source);
 
 	const root = parse(tokens);
 
-	return assembleParserResult(root);
+	const expanded = expandIncludes(root, includeResolver);
+
+	return assembleParserResult(expanded);
 };

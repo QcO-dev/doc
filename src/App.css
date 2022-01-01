@@ -9,7 +9,6 @@ main {
 	text-align: center;
 	width: 50vw;
 	padding-top: 2em;
-	gap: 2em;
 }
 
 header {
@@ -66,9 +65,19 @@ table, th, td {
 	padding: .2em;
 }
 
+.error {
+	display: block;
+	height: 2em;
+}
+
 .errorGlyph {
 	background: red;
 }
 .errorLine {
 	background: #7a0707;
+}
+
+.monitors {
+	display: flex;
+	gap: 1em;
 }

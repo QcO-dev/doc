@@ -2,31 +2,14 @@ import Editor from "@monaco-editor/react";
 import { useRef, useState } from "react";
 import "./App.css";
 import { assemble } from "./assembler";
+import { resolveInclude } from "./includes";
 import { Emulator } from "./emulator";
 import { registerList } from "./encoding";
 import { languageDef, configuration, theme } from "./language-def";
 
-const defaultText =`; macro definitions
-@macro hlt
-    mov rv, #1
-    or rf, rv
-@endmacro
+const defaultText =`@include "std.asm"
 
-@macro sub %r0, %l0
-    mov rv, %l0
-    sub %r0, rv
-@endmacro
-
-@macro dec %r0
-    sub %r0, #1
-@endmacro
-
-@macro jnz %r0, %l0
-    lda %l0
-    jnz %r0
-@endmacro
-
-; initialise registers (5, 10, 0, 1)
+; initialise registers (5, 10, 0)
     mov r1, #5
     mov r2, #10
     mov r3, r0
@@ -40,12 +23,13 @@ $top:
 
     jnz r2, $top
 
-    ; halt the program
+    ; halt the program - result is in r3
     hlt`;
 
 const editorOptions = {
 	fontFamily: "JetBrains Mono",
-	glyphMargin: true
+	glyphMargin: true,
+	scrollBeyondLastLine: false
 };
 
 function App() {
@@ -76,7 +60,7 @@ function App() {
 	const handleAssemble = () => {
 		const source = editorRef.current.getValue();
 		try {
-			setAssembledMemory(assemble(source));
+			setAssembledMemory(assemble(source, resolveInclude));
 
 			setError(null);
 
@@ -122,28 +106,32 @@ function App() {
 					<button onClick={handleAssemble}>Assemble</button>
 					<button onClick={handleRun}>Run</button>
 				</header>
-				<div style={{ display: "flex", gap: "0.5em" }}>
-					{error ? <p className="error">{error}</p> :
-					assembledMemory.map((b, i) => <p key={i}>{b}</p>)}
+
+				{<p className="error">{error ?? ""}</p>}
+
+				<div className="monitors">
+					<div style={{ display: "flex", gap: "0.5em" }}>
+						{assembledMemory.map((b, i) => <p key={i}>{b}</p>)}
+					</div>
+					<table>
+						<thead>
+							<tr>
+								<th>Register</th>
+								<th>Value</th>
+							</tr>
+						</thead>
+						<tbody>
+							{
+								Array.from(registers).map((v, i) => {
+									return (<tr key={i}>
+										<td>{registerList[i]}</td>
+										<td>{v}</td>
+									</tr>);
+								})
+							}
+						</tbody>
+					</table>
 				</div>
-				<table>
-					<thead>
-						<tr>
-							<th>Register</th>
-							<th>Value</th>
-						</tr>
-					</thead>
-					<tbody>
-						{
-							Array.from(registers).map((v, i) => {
-								return (<tr key={i}>
-									<td>{registerList[i]}</td>
-									<td>{v}</td>
-								</tr>);
-							})
-						}
-					</tbody>
-				</table>
 			</main>
 		</div>
 	);
