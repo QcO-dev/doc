@@ -43,6 +43,9 @@ function App() {
 	const [registers, setRegisters] = useState(new Uint8Array(16));
 	const [error, setError] = useState(null);
 
+	const [memoryHighInput, setMemoryHighInput] = useState("00");
+	const [memoryHigh, setMemoryHigh] = useState(0);
+
 	const editorWillMount = monaco => {
 		if (!monaco.languages.getLanguages().some(({ id }) => id === 'doc')) {
 			monaco.languages.register({ id: 'doc' });
@@ -56,6 +59,11 @@ function App() {
 	const handleEditorDidMount = (editor, monaco) => {
 		editorRef.current = editor;
 		monacoRef.current = monaco;
+	};
+
+	const handleMemoryHighInputSubmit = e => {
+		setMemoryHigh(Number.parseInt(memoryHighInput, 16));
+		e.preventDefault();
 	};
 
 	const handleAssemble = () => {
@@ -101,9 +109,9 @@ function App() {
 	};
 
 	const renderMemory = () => { 
-		const baseMemory = Array.from(memory.slice(0, 0xff + 1)).map((b, i) => <p key={i} className="memoryItem">{b}</p>);
+		const baseMemory = Array.from(memory.slice(memoryHigh * 256, memoryHigh * 256 + 0xff + 1)).map((b, i) => <p key={i} className="memoryItem">{b.toString(16).padStart(2, '0')}</p>);
 
-		const padded = Array.from({ ...baseMemory, length: 0xff + 1 }, (v, i) => v ?? <p key={i} className="memoryItem">0</p>);
+		const padded = Array.from({ ...baseMemory, length: 0xff + 1 }, (v, i) => v ?? <p key={i} className="memoryItem">00</p>);
 
 		padded.unshift(...Array.from({length: 16}).map((_, i) => i).map((b, i) => <p key={"ht" + i} className="memoryHeader">{b.toString(16).padStart(2, '0')}</p>));
 
@@ -131,8 +139,15 @@ function App() {
 				{<p className="error">{error ?? ""}</p>}
 
 				<div className="monitors">
-					<div className="memory">
-						{renderMemory()}
+					<div className="memoryWrapper">
+						<form onSubmit={handleMemoryHighInputSubmit} autoComplete="off" autoCapitalize="off" autoCorrect="off">
+							<label htmlFor="memoryHigh">View Memory Range</label>
+							<input className="memoryHighInput" type="text" name="memoryHigh" pattern="[a-fA-F0-9]{2}" 
+								value={memoryHighInput} onChange={e => setMemoryHighInput(e.target.value.replace(/[^a-fA-F0-9]/, "").slice(0, 2))} />
+						</form>
+						<div className="memory">
+							{renderMemory()}
+						</div>
 					</div>
 
 					<table>

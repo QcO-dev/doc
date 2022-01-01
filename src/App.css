@@ -90,6 +90,18 @@ table, th, td {
 }
 
 .memoryItem {
-	padding: .15rem;
+	padding: .3rem;
 	border: 1px solid #9c9c9c;
+}
+
+.memoryHeader {
+	padding: .3rem;
+}
+
+label {
+	padding-right: .5em;
+}
+
+.memoryHighInput {
+	width: 4ch;
 }
