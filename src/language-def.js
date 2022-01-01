@@ -16,6 +16,7 @@ export const languageDef = {
 			[/(#(([0-1]+b)|([0-9a-fA-F]+h)|([0-9]+)))/, 'number'],
 			[/(%r[0-9]+)|(%l[0-9]+)/, "parameter"],
 			[/@[a-zA-Z_][a-zA-Z0-9_]*/, "type"],
+			[/".*?"/, "string"]
 		],
 		whitespace: [
 			[/[ \t\r\n]+/, 'white'],
