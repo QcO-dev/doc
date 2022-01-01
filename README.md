@@ -39,3 +39,5 @@ The DOC has access to 64KB of memory (An address consists of 16 bits).
 # Flags
 
  - (0b00000001) HALT - halts the computer
+ - (0b00000010) CARRY - If an 'add' or 'adc' instruction carries from overflow
+ - (0b00000100) BORROW - If a 'sub' or 'sbb' instruction borrows from overflow

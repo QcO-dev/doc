@@ -105,8 +105,8 @@ export class Emulator {
 				case Encoding.ADD_REGISTER_REGISTER: {
 					const regA = this.memory[ip++] & 0xf;
 					const regB = this.memory[ip++] >> 4;
-	
-					if(regA + regB > 0xff) {
+
+					if((this.registers[regA] + this.registers[regB]) > 0xff) {
 						this.registers[registerMap.rf] |= 0x2;
 					}
 					else {
@@ -121,8 +121,15 @@ export class Emulator {
 				case Encoding.ADC_REGISTER_REGISTER: {
 					const regA = this.memory[ip++] & 0xf;
 					const regB = this.memory[ip++] >> 4;
-	
-					const carry = this.registers[registerMap.rf] & 0x2;
+					
+					const carry = (this.registers[registerMap.rf] >> 1) & 1;
+
+					if((this.registers[regA] + this.registers[regB] + carry) > 0xff) {
+						this.registers[registerMap.rf] |= 0x2;
+					}
+					else {
+						this.registers[registerMap.rf] &= 0xff - 0x2;
+					}
 	
 					this.registers[regA] += this.registers[regB] + carry;
 					this.registers[regA] &= 0xff;
@@ -133,7 +140,7 @@ export class Emulator {
 					const regA = this.memory[ip++] & 0xf;
 					const regB = this.memory[ip++] >> 4;
 	
-					if(regB >= regA) {
+					if(regB > regA) {
 						this.registers[registerMap.rf] |= 0x4;
 					}
 					else {
@@ -149,16 +156,17 @@ export class Emulator {
 					const regA = this.memory[ip++] & 0xf;
 					const regB = this.memory[ip++] >> 4;
 	
-					const borrow = this.registers[registerMap.rf] & 0x4;
+					const borrow = (this.registers[registerMap.rf] >> 2) & 1;
 	
-					if(regB + borrow >= regA) {
+					if(regB + borrow > regA) {
 						this.registers[registerMap.rf] |= 0x4;
 					}
 					else {
 						this.registers[registerMap.rf] &= 0xff - 0x4;
 					}
-	
-					this.registers[regA] -= this.registers[regB] - borrow;
+					
+					this.registers[regA] -= this.registers[regB];
+					this.registers[regA] -= borrow;
 					this.registers[regA] &= 0xff;
 					break;
 				}
