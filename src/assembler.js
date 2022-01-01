@@ -334,14 +334,16 @@ const assembleParserResult = (root) => {
 			.map(n => n.type)
 			.map(n => n === "label" || n === "literal" ? "literal-variable" : n)
 			.map(n => n === "register" ? "register-variable" : n)].join("-");
-		const macro = macros[macroName];
+		let macro = macros[macroName];
 
 		const registers = args.filter(n => n.type === "register");
 		const literals = args.filter(n => n.type === "label" || n.type === "literal");
-		
+
 		if(macro === undefined) {
 			return false;
 		}
+
+		macro = JSON.parse(JSON.stringify(macro));
 
 		for(let macroNode of macro.body) {
 			if(macroNode.type === "instruction" || macroNode.type === "macro") {
@@ -352,6 +354,7 @@ const assembleParserResult = (root) => {
 						macroNode.args[i] = registers[arg.value];
 					}
 					else if(arg.type === "literal-variable") {
+						console.log(arg.value);
 						macroNode.args[i] = literals[arg.value];
 					}
 				}
@@ -395,7 +398,6 @@ const assembleParserResult = (root) => {
 			continue;
 		}
 		if(node.type === "macro") {
-
 			const macroExpanded = expandMacro(node.name, node.args);
 
 			if(!macroExpanded) {
@@ -444,6 +446,8 @@ const assembleParserResult = (root) => {
 	}
 
 	const byteData = [];
+
+	console.table(macroExpanded);
 
 	for(let node of macroExpanded) {
 		if(node.type === "instruction") {

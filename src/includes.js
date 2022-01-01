@@ -112,6 +112,18 @@ const std = `
 	xnor %r0, rv
 @endmacro
 
+@macro inb %r0, %l0
+	mov rah, #eeh
+	mov ral, %l0
+	mov %r0
+@endmacro
+
+@macro outb %l0, %r0
+	mov rah, #eeh
+	mov ral, %l0
+	sta %r0
+@endmacro
+
 @macro hlt
 	or rf, #1
 @endmacro
